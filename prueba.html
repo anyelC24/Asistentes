@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grabador y Narrador de Voz</title>
+    <style>
+        /* CSS integrado */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 300px;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 0;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        audio {
+            margin-top: 20px;
+            width: 100%;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Grabador y Narrador de Voz</h1>
+        <button id="start-record">Iniciar Grabación</button>
+        <button id="stop-record" disabled>Detener Grabación</button>
+        <audio id="audio-playback" controls></audio>
+        <textarea id="text-to-speech" placeholder="Ingrese el texto para narrar..."></textarea>
+        <button id="start-speech">Narrar Texto</button>
+    </div>
+
+    <script>
+        // JavaScript integrado
+        let mediaRecorder;
+        let audioChunks = [];
+        let audioBlob;
+
+        // Grabación de audio
+        document.getElementById('start-record').addEventListener('click', async () => {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.start();
+                document.getElementById('start-record').disabled = true;
+                document.getElementById('stop-record').disabled = false;
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                    const audioURL = URL.createObjectURL(audioBlob);
+                    document.getElementById('audio-playback').src = audioURL;
+                    audioChunks = [];
+                };
+            } else {
+                alert("Tu navegador no soporta grabación de audio.");
+            }
+        });
+
+        document.getElementById('stop-record').addEventListener('click', () => {
+            mediaRecorder.stop();
+            document.getElementById('start-record').disabled = false;
+            document.getElementById('stop-record').disabled = true;
+        });
+
+        // Narración de texto
+        document.getElementById('start-speech').addEventListener('click', () => {
+            const text = document.getElementById('text-to-speech').value;
+            if (text.trim() !== "") {
+                const speechSynthesisUtterance = new SpeechSynthesisUtterance(text);
+                window.speechSynthesis.speak(speechSynthesisUtterance);
+            } else {
+                alert("Por favor ingrese algún texto para narrar.");
+            }
+        });
+    </script>
+</body>
+</html>
